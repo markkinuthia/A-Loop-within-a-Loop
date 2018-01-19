@@ -1,0 +1,41 @@
+#UPLOAD THE DATA AND LIST WITH THE UNIQUE STATES
+data<-read.csv(file.choose())
+list<-read.csv(file.choose())
+#Load packages 
+library(dplyr)
+library(openxlsx)
+require(openxlsx)
+#Define the loop variables (this report will have two levels state and city , hence two loop variables)
+i <- 1
+j <- 1
+#convert the Numeric column of AVerage Total Payment to as.numeric to enable summarising
+data$Average.Total.Payments<-as.numeric(data$Average.Total.Payments)
+#The first loop will filter the data according to state, then define the maximum iterations for the second loop
+while (j < 53) {
+  {
+    x<-list[j,1]
+    data.frame(x)
+    xclaims <- data[which(data$Provider.State %in% x ),]
+    a <- data.frame(unique(xclaims$Provider.City))
+    b <- nrow(a)+1
+    c <- list()
+#The second loop will further drill down to the specific cities and hospitals in those cities
+while (i < b){
+    {
+    d<-a[i,1]
+    data.frame(d)
+    Provider.Data<-xclaims[which(xclaims$Provider.City %in% d),]
+    Provider.Hospital.State.analysis<-group_by(Provider.Data,Provider.Name,DRG.Definition)%>%summarise(sum((Average.Total.Payments)))
+    colnames(Provider.Hospital.State.analysis)<-c("Provider.Name","Disease.Profile","Average.Payment")
+    c[[paste0(d,".REPORT")]] <- Provider.Hospital.State.analysis  
+    }
+    i<-i+1
+    }
+#Finally the below code is used for writing the various data.frames into excel,to loop over the reports I have included the i variable
+hs <- createStyle(textDecoration = "BOLD", fontColour = "#FFFFFF", fontSize=12,fontName="Arial Narrow", fgFill = "#4F80BD")
+write.xlsx(c,asTable = TRUE,colWidths = "auto",borderColour ="#RRRRRR" ,headerStyle = hs,file = paste0("PROVIDER REPORT FOR ",list[j,1],".xlsx"))
+    }
+j<-j+1
+i<-1
+}    
+  
