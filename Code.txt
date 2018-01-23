@@ -1,4 +1,6 @@
-#UPLOAD THE DATA AND LIST WITH THE UNIQUE STATES
+#Adjust R for it to be able to handle the huge csv files being written
+Sys.setenv(R_ZIPCMD= "C:/Rtools/bin/zip") 
+#Upload the inpatientcharges data and a list of U.S. individual states
 data<-read.csv(file.choose())
 list<-read.csv(file.choose())
 #Load packages 
@@ -10,7 +12,7 @@ i <- 1
 j <- 1
 #convert the Numeric column of AVerage Total Payment to as.numeric to enable summarising
 data$Average.Total.Payments<-as.numeric(data$Average.Total.Payments)
-#The first loop will filter the data according to state, then define the maximum iterations for the second loop
+    #The first loop will filter the data according to state, then define the maximum iterations for the second loop
 while (j < 53) {
   {
     x<-list[j,1]
@@ -19,23 +21,26 @@ while (j < 53) {
     a <- data.frame(unique(xclaims$Provider.City))
     b <- nrow(a)+1
     c <- list()
-#The second loop will further drill down to the specific cities and hospitals in those cities
+    
+    #The second loop will further drill down to the specific cities and hospitals in those cities
 while (i < b){
     {
     d<-a[i,1]
     data.frame(d)
     Provider.Data<-xclaims[which(xclaims$Provider.City %in% d),]
-    Provider.Hospital.State.analysis<-group_by(Provider.Data,Provider.Name,DRG.Definition)%>%summarise(sum((Average.Total.Payments)))
-    colnames(Provider.Hospital.State.analysis)<-c("Provider.Name","Disease.Profile","Average.Payment")
+    Provider.Hospital.State.analysis<-group_by(Provider.Data,DRG.Definition,Provider.Name)%>%summarise( x = (Average.Total.Payments), y = (Average.Medicare.Payments),z= (x-y))%>%arrange(z)
+    colnames(Provider.Hospital.State.analysis)<-c("Disease.Profile","Provider.Name","Mean.Total.Payments","Mean.Medicare.Payments","Variance")
     c[[paste0(d,".REPORT")]] <- Provider.Hospital.State.analysis  
     }
     i<-i+1
     }
-#Finally the below code is used for writing the various data.frames into excel,to loop over the reports I have included the i variable
-hs <- createStyle(textDecoration = "BOLD", fontColour = "#FFFFFF", fontSize=12,fontName="Arial Narrow", fgFill = "#4F80BD")
-write.xlsx(c,asTable = TRUE,colWidths = "auto",borderColour ="#RRRRRR" ,headerStyle = hs,file = paste0("PROVIDER REPORT FOR ",list[j,1],".xlsx"))
+
+    #Finally the below code is used for writing the various data.frames into excel,to loop over the reports I have included the i variable
+    
+    hs <- createStyle(textDecoration = "BOLD", fontColour = "#FFFFFF", fontSize=12,fontName="Arial Narrow", fgFill = "#4F80BD")
+    write.xlsx(c,asTable = TRUE,colWidths = "auto",borderColour ="#RRRRRR" ,headerStyle = hs,file = paste0("PROVIDER REPORT FOR ",list[j,1],".xlsx"))
     }
 j<-j+1
 i<-1
 }    
-  
+   
